@@ -1,0 +1,149 @@
+---
+layout: default
+title: Experimento de Caída Libre
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }} | Libro de Laboratorio de Física</title>
+    <meta name="description" content="Experimento interactivo sobre caída libre en nuestro libro de laboratorio de física digital.">
+    <link rel="stylesheet" href="{{ '/assets/css/styles.css' | relative_url }}">
+    <script src="{{ '/assets/js/main.js' | relative_url }}" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav aria-label="Navegación principal">
+            <ul>
+                <li><a href="{{ '/' | relative_url }}">Inicio</a></li>
+                <li><a href="{{ '/experimentos' | relative_url }}">Experimentos</a></li>
+                <li><a href="{{ '/about' | relative_url }}">Acerca de</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <article>
+            <h1>{{ page.title }}</h1>
+            
+            <section id="introduccion">
+                <h2>Introducción</h2>
+                <p>En este experimento, estudiaremos el fenómeno de la caída libre y cómo la gravedad afecta a los objetos en caída.</p>
+            </section>
+
+            <section id="simulacion">
+                <h2>Simulación Interactiva</h2>
+                <div id="simulacion-container" aria-live="polite">
+                    <!-- La simulación se cargará aquí con JavaScript -->
+                </div>
+                <button id="iniciar-simulacion">Iniciar Simulación</button>
+            </section>
+
+            <section id="datos">
+                <h2>Recolección de Datos</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Altura (m)</th>
+                            <th>Tiempo (s)</th>
+                            <th>Velocidad (m/s)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="datos-tabla">
+                        <!-- Los datos se cargarán aquí con JavaScript -->
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="analisis">
+                <h2>Análisis</h2>
+                <p>Basándote en los datos recolectados, responde las siguientes preguntas:</p>
+                <ol>
+                    <li>
+                        <label for="pregunta1">¿Cómo cambia la velocidad del objeto con el tiempo?</label>
+                        <textarea id="pregunta1" rows="3"></textarea>
+                    </li>
+                    <li>
+                        <label for="pregunta2">¿Qué relación observas entre la altura y el tiempo de caída?</label>
+                        <textarea id="pregunta2" rows="3"></textarea>
+                    </li>
+                </ol>
+            </section>
+
+            <section id="conclusiones">
+                <h2>Conclusiones</h2>
+                <p>Resume tus hallazgos y conclusiones sobre el experimento de caída libre:</p>
+                <textarea id="conclusiones-texto" rows="5"></textarea>
+            </section>
+        </article>
+    </main>
+
+    <aside id="notas-panel" aria-label="Panel de notas">
+        <h2>Mis Notas</h2>
+        <div id="notas-container"></div>
+        <button id="agregar-nota">Agregar Nota</button>
+    </aside>
+
+    <footer>
+        <p>&copy; 2024 Libro de Laboratorio de Física Digital. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // Código para inicializar IndexedDB y manejar el almacenamiento local
+        let db;
+        const dbName = 'PhysicsLabDB';
+
+        const request = indexedDB.open(dbName, 1);
+
+        request.onerror = function(event) {
+            console.error("Error al abrir DB:", event.target.error);
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            cargarNotas();
+        };
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            const objectStore = db.createObjectStore("notas", { keyPath: "id", autoIncrement: true });
+        };
+
+        function agregarNota() {
+            const nota = prompt("Ingrese su nota:");
+            if (nota) {
+                const transaction = db.transaction(["notas"], "readwrite");
+                const objectStore = transaction.objectStore("notas");
+                const request = objectStore.add({ contenido: nota, fecha: new Date() });
+
+                request.onsuccess = function(event) {
+                    cargarNotas();
+                };
+            }
+        }
+
+        function cargarNotas() {
+            const notasContainer = document.getElementById('notas-container');
+            notasContainer.innerHTML = '';
+
+            const objectStore = db.transaction("notas").objectStore("notas");
+            objectStore.openCursor().onsuccess = function(event) {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const nota = document.createElement('div');
+                    nota.textContent = cursor.value.contenido;
+                    notasContainer.appendChild(nota);
+                    cursor.continue();
+                }
+            };
+        }
+
+        document.getElementById('agregar-nota').addEventListener('click', agregarNota);
+
+        // Aquí iría más código JavaScript para manejar la simulación, recolección de datos, etc.
+    </script>
+</body>
+</html>
